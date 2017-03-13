@@ -9,6 +9,7 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.style.ClickableSpan;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,10 @@ import java.util.regex.Pattern;
 import static android.widget.LinearLayout.HORIZONTAL;
 import static android.widget.LinearLayout.VERTICAL;
 
+/**
+ * Created by jktaihe on 12/3/17.
+ * blag: blag.jktaihe.com
+ */
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,19 +39,22 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(VERTICAL);
-
-        title = new TextView(this);
-        title.setText("a sample browser");
-        LayoutParams titleParam = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        layout.addView(title, titleParam);
-
+        initTitle(layout);
         initHeader(layout);
         initWV(layout);
+        LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+        setContentView(layout, params);
+    }
 
-        setContentView(layout,new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    private void initTitle(LinearLayout layout) {
+        title = new TextView(this);
+        title.setText("A sample browser");
+        title.setTextSize(17f);
+        title.setGravity(Gravity.CENTER);
+        LayoutParams titleParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+        layout.addView(title,titleParams);
     }
 
     private void initWV(LinearLayout v) {
@@ -54,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
         LayoutParams wvParams = new LayoutParams(LayoutParams.MATCH_PARENT, 0);
         wvParams.weight = 1;
         v.addView(wv, wvParams);
-
         setWV();
     }
 
@@ -94,6 +101,14 @@ public class MainActivity extends AppCompatActivity {
         LayoutParams headerETParams = new LayoutParams(0, LayoutParams.WRAP_CONTENT);
         headerETParams.weight = 1;
         searchET.setHint("pl,input something");
+        searchET.setMaxLines(1);
+        searchET.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                return (event.getKeyCode()==KeyEvent.KEYCODE_ENTER);
+            }
+        });
+
         headerLayout.addView(searchET, 0, headerETParams);
 
         LayoutParams headerBtnParams = new LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -108,52 +123,6 @@ public class MainActivity extends AppCompatActivity {
                 wv.loadUrl(urlString);
             }
         });
-    }
-
-    public void getUrlFromText(String msg, TextView textview) {
-        Pattern pattern = Pattern.compile("(http://|https://|www.){1}[[^\\u4e00-\\u9fa5]&&\\w\\.\\-/:\\?\\&\\%\\@\\_a-zA-Z0-9\\=\\,]+", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(msg);
-        int startPoint = 0;
-
-        SpannableString sps = new SpannableString(msg);
-        String url;
-        while (matcher.find(startPoint)) {
-            int endPoint = matcher.end();
-            url = matcher.group();
-            ClickableSpan clickSpan = new ClickSpan(url);
-            sps.setSpan(clickSpan, endPoint - url.length(), endPoint, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            startPoint = endPoint;
-        }
-        textview.setText(sps);
-        url = null;
-
-    }
-
-
-    class ClickSpan extends ClickableSpan {
-        String text;
-        TextPaint paint = null;
-
-        public ClickSpan(String text) {
-            super();
-            this.text = text;
-        }
-
-        @Override
-        public void updateDrawState(TextPaint ds) {
-            ds.linkColor = Color.parseColor("#00648f");
-        }
-
-        public void onClick(View widget) {
-            Intent intent = new Intent(MainActivity.this, MainActivity.class);
-            final Bundle bundle = new Bundle();
-            if (!text.startsWith("https+://")) {
-                text = "https://" + text;
-            }
-            bundle.putString("url", text);
-            intent.putExtras(bundle);
-            startActivity(intent);
-        }
     }
 
 
