@@ -1,18 +1,10 @@
 package com.jktaihe.browser;
 
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.TextPaint;
-import android.text.style.ClickableSpan;
-import android.view.Gravity;
+import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
@@ -20,8 +12,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import android.widget.Toast;
+import com.jktaihe.browser.util.StringUtils;
 import static android.widget.LinearLayout.HORIZONTAL;
 import static android.widget.LinearLayout.VERTICAL;
 
@@ -33,29 +25,20 @@ import static android.widget.LinearLayout.VERTICAL;
 public class MainActivity extends AppCompatActivity {
 
     private EditText searchET = null;
-    private TextView title = null;
     private WebView wv = null;
+    private LinearLayout layout = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        LinearLayout layout = new LinearLayout(this);
+        layout = new LinearLayout(this);
         layout.setOrientation(VERTICAL);
-        initTitle(layout);
         initHeader(layout);
         initWV(layout);
         LayoutParams params = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
         setContentView(layout, params);
     }
 
-    private void initTitle(LinearLayout layout) {
-        title = new TextView(this);
-        title.setText("A sample browser");
-        title.setTextSize(17f);
-        title.setGravity(Gravity.CENTER);
-        LayoutParams titleParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-        layout.addView(title,titleParams);
-    }
 
     private void initWV(LinearLayout v) {
         wv = new WebView(this);
@@ -73,16 +56,6 @@ public class MainActivity extends AppCompatActivity {
 //        wv.getSettings().setAllowFileAccessFromFileURLs(true);
 
         wv.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                return super.shouldOverrideUrlLoading(view, url);
-            }
-
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                title.setText("" + view.getTitle());
-            }
 
             @Override
             public void onPageFinished(WebView view, String url) {
@@ -105,7 +78,10 @@ public class MainActivity extends AppCompatActivity {
         searchET.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                return (event.getKeyCode()==KeyEvent.KEYCODE_ENTER);
+                if ((event.getKeyCode()==KeyEvent.KEYCODE_SEARCH)){
+
+                }
+                return true;
             }
         });
 
@@ -119,12 +95,28 @@ public class MainActivity extends AppCompatActivity {
         searchBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String urlString = searchET.getText().toString().trim();
-                wv.loadUrl(urlString);
+                search(searchET.getText().toString().trim());
             }
         });
     }
 
+    private void search(String s) {
+
+        if (TextUtils.isEmpty(s)){
+            Toast.makeText(this,"输入不可以为空",Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String netUrl;
+
+        if (StringUtils.isUrl(s)){
+            netUrl = s;
+        }else {
+            netUrl = "https://www.google.com/#newwindow=1&q="+s;
+        }
+
+        wv.loadUrl(netUrl);
+    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -142,6 +134,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void destroyWV() {
+        layout.removeAllViews();
+        layout = null;
         wv.removeAllViews();
         wv.destroy();
         wv = null;
